@@ -1,1 +1,1 @@
-# kretaretek
+Basic project to automate some tasks in Kréta

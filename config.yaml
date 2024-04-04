@@ -1,0 +1,7 @@
+url:
+  main: "https://klik102382021.e-kreta.hu/"
+  child_listbox: "https://klik102382021.e-kreta.hu/TanuloErtekeles/Ertekeles/IndexEvkozi"
+datafile: "Data.xlsx"
+credentials:
+  username: ""
+  password: ""

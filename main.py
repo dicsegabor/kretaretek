@@ -5,74 +5,78 @@ from selenium.webdriver.support import expected_conditions as EC
 
 import pandas as pd
 
-from yaml import safe_load
+
+def select_from_dropdown(text):
+    with open("./find_and_click.js", "r") as file:
+        script = file.read()
+        driver.execute_script(script, (text))
 
 
-def select_from_dropdown(driver, text):
-    with open("find_and_click.js", "r") as file:
-        driver.execute_script(file.read(), (text))
-
-
-def wait_for_element(driver, selector):
+def wait_for_element(selector):
     # Wait for manual login - Adapt the condition if needed
     WebDriverWait(driver, 600).until(  # Adjust timeout if necessary
         EC.presence_of_element_located(selector)
     )
 
 
-if __name__ == "__main__":
-    # Load config
-    with open("config.yaml", "r") as file:
-        config = safe_load(file)
+# Kréta url
+website_url = "https://klik102382021.e-kreta.hu/"
 
-    selectors = {
-        "login_confirm_image": (
-            By.CSS_SELECTOR,
-            "body > div > div.Box-Container > div:nth-child(1) > div.Box-Icon > img",
-        ),
-        "save_grade_button": (
-            By.CSS_SELECTOR,
-            "#ErtekelesTanuloErtekelesGrid > div > div.kendo-gridFunctionKommand > button.k-button.k-button-icontext.saveErtekeles",
-        ),
-    }
+driver = webdriver.Chrome()  # Use the appropriate WebDriver for your browser
+driver.get(website_url)
 
-    # Setup driver
-    driver = webdriver.Chrome()
-    driver.get(config["url"]["main"])
+# Wait for manual login - Adapt the condition if needed
+wait_for_element(
+    (
+        By.CSS_SELECTOR,
+        "body > div > div.Box-Container > div:nth-child(1) > div.Box-Icon > img",
+    )
+)
 
-    # Wait for manual login - Adapt the condition if needed
-    wait_for_element(driver, selectors["login_confirm_image"])
+student_name, grade, date, grade_type = "", "", "", ""
 
-    df = pd.read_excel(config["datafile"])
-    for row in df.iterrows():
-        student_name = row["Name"]
-        grade = row["Grade"]
-        date = row["Date"]
-        grade_type = row["Type"]
+df = pd.read_excel("Data.xlsx")
+for index, row in df.iterrows():
+    student_name = row["Name"]
+    grade = row["Grade"]
+    date = row["Date"]
+    grade_type = row["Type"]
 
-        driver.get(config["url"]["child_listbox"])
+    print(
+        f"name: {student_name}, grade: {grade}, date: {date}, grade_type: {grade_type}"
+    )
 
-        ###### Gyereklistás oldal ######
-        wait_for_element(driver, (By.ID, "StartTovabbButton"))
+    # Gyereklistás oldal
+    grades_url = (
+        "https://klik102382021.e-kreta.hu/TanuloErtekeles/Ertekeles/IndexEvkozi"
+    )
+    driver.get(grades_url)
 
-        # Gyerek kiválasztása listából
-        select_from_dropdown(driver, student_name)
-        driver.find_element(By.ID, "StartTovabbButton").click()
+    # Gyerek kiválasztása listából
+    wait_for_element((By.ID, "StartTovabbButton"))
+    select_from_dropdown(student_name)
+    driver.find_element(By.ID, "StartTovabbButton").click()
 
-        ###### Gyerek oldal ######
-        wait_for_element(driver, selectors["save_grade_button"])
+    driver.find_element(
+        By.CSS_SELECTOR,
+        "#ErtekelesTanuloErtekelesGrid > div > div.kendo-gridFunctionKommand > button.k-button.k-button-icontext.saveErtekeles",
+    ).click()
 
-        # Jegy kiválasztása
-        driver.find_element(By.XPATH, f'//*[@title="{grade}"]').click()
+    # Jegy kiválasztása
+    driver.find_element(By.XPATH, f'//*[@title="{grade}"]').click()
 
-        # Dátum beírása
-        with open("write_into_date_field.js", "r") as file:
-            driver.execute_script(file.read(), (date))
+    # Dátum beírása
+    # date_field = driver.find_element(By.ID, "Datum")
+    with open("./write_into_date_field.js", "r") as file:
+        driver.execute_script(file.read(), (date))
 
-        # Jegytípus beírása
-        select_from_dropdown(driver, grade_type)
+    # Jegytípus beírása
+    select_from_dropdown(grade_type)
 
-        # Mentés
-        driver.find_element(selectors["save_grade_button"]).click()
+    # Mentés
+    driver.find_element(
+        By.CSS_SELECTOR,
+        "#ErtekelesTanuloErtekelesGrid > div > div.kendo-gridFunctionKommand > button.k-button.k-button-icontext.saveErtekeles",
+    ).click()
 
-    driver.quit()
+driver.quit()

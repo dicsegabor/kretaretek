@@ -2,15 +2,14 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 
 import pandas as pd
-
 
 def select_from_dropdown(text):
     with open("./find_and_click.js", "r") as file:
         script = file.read()
-        driver.execute_script(script, (text))
-
+        driver.execute_script(script, text)
 
 def wait_for_element(selector):
     # Wait for manual login - Adapt the condition if needed
@@ -22,7 +21,9 @@ def wait_for_element(selector):
 # Kréta url
 website_url = "https://klik102382021.e-kreta.hu/"
 
-driver = webdriver.Chrome()  # Use the appropriate WebDriver for your browser
+options = Options()
+options.add_argument("--start-maximized")
+driver = webdriver.Chrome(options)  # Use the appropriate WebDriver for your browser
 driver.get(website_url)
 
 # Wait for manual login - Adapt the condition if needed
@@ -54,8 +55,11 @@ for index, row in df.iterrows():
 
     # Gyerek kiválasztása listából
     wait_for_element((By.ID, "StartTovabbButton"))
+    input("gyerek előtt")
     select_from_dropdown(student_name)
+    input("gyerek után")
     driver.find_element(By.ID, "StartTovabbButton").click()
+    input("gomb után")
 
     driver.find_element(
         By.CSS_SELECTOR,
@@ -63,7 +67,7 @@ for index, row in df.iterrows():
     ).click()
 
     # Jegy kiválasztása
-    driver.find_element(By.XPATH, f'//*[@title="{grade}"]').click()
+    driver.execute_script(f"ErtekelesHelper.changeAllOsztalyzatValue(150{grade[-2]});")
 
     # Dátum beírása
     # date_field = driver.find_element(By.ID, "Datum")
@@ -72,11 +76,12 @@ for index, row in df.iterrows():
 
     # Jegytípus beírása
     select_from_dropdown(grade_type)
-
+    
     # Mentés
     driver.find_element(
         By.CSS_SELECTOR,
         "#ErtekelesTanuloErtekelesGrid > div > div.kendo-gridFunctionKommand > button.k-button.k-button-icontext.saveErtekeles",
     ).click()
+    input("asd")
 
 driver.quit()

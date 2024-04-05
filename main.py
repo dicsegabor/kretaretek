@@ -41,7 +41,7 @@ if __name__ == "__main__":
     driver.get(config["url"]["main"])
 
     # Wait for manual login - Adapt the condition if needed
-    wait_for_element(selectors["login_confirm_image"])
+    wait_for_element(driver, selectors["login_confirm_image"])
 
     df = pd.read_excel(config["datafile"])
     for row in df.iterrows():
